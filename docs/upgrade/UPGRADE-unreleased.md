@@ -12,6 +12,7 @@ There you can find links to upgrade notes for other versions too.
 ## [shopsys/coding-standards]
 - We require to have visibility specified for constants ([#904](https://github.com/shopsys/shopsys/pull/904))
   You can skip `Shopsys\CodingStandards\Sniffs\ConstantVisibilityRequiredSniff`, if it is not suits you
+- Skip `Shopsys\CodingStandards\Sniffs\ForceLateStaticBindingForProtectedConstantsSniff` sniff in your `easy-coding-standard.yml`, so you won't be forced to use `static` on protected constants ([#904](https://github.com/shopsys/shopsys/pull/904))
 
 [Upgrade from v7.1.0 to Unreleased]: https://github.com/shopsys/shopsys/compare/v7.1.0...HEAD
 [shopsys/framework]: https://github.com/shopsys/framework
