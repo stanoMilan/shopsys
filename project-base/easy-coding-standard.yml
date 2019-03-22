@@ -29,6 +29,10 @@ parameters:
             - '*/tests/ShopBundle/Functional/EntityExtension/EntityExtensionTest.php'
             - '*/tests/ShopBundle/Test/Codeception/_generated/AcceptanceTesterActions.php'
 
+        Shopsys\CodingStandards\Sniffs\ForceLateStaticBindingForProtectedConstantsSniff:
+            - '*/src/Shopsys/ShopBundle/*'
+            - '*/tests/ShopBundle/*'
+
         Shopsys\CodingStandards\Sniffs\ObjectIsCreatedByFactorySniff:
             - '*/tests/*'
 
