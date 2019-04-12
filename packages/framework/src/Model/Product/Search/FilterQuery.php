@@ -19,6 +19,12 @@ class FilterQuery
     /** @var array */
     protected $sorting = ['ordering_priority' => 'asc', 'name.keyword' => 'asc'];
 
+    /** @var int */
+    protected $limit = 1000;
+
+    /** @var int */
+    protected $page = 1;
+
     /** @var array */
     protected $match;
 
@@ -248,6 +254,28 @@ class FilterQuery
     }
 
     /**
+     * @param int $page
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery
+     */
+    public function setPage(int $page): self
+    {
+        $this->page = $page;
+
+        return $this;
+    }
+
+    /**
+     * @param int $limit
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery
+     */
+    public function setLimit(int $limit): self
+    {
+        $this->limit = $limit;
+
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getQuery(): array
@@ -255,8 +283,9 @@ class FilterQuery
         $query = [
             'index' => $this->indexName,
             'type' => '_doc',
-            'size' => 1000,
             'body' => [
+                'from' => $this->countFrom($this->page, $this->limit),
+                'size' => $this->limit,
                 'sort' => $this->sorting,
                 'query' => [
                     'bool' => [
@@ -278,5 +307,15 @@ class FilterQuery
         return [
             'match_all' => new \stdClass(),
         ];
+    }
+
+    /**
+     * @param int $page
+     * @param int $limit
+     * @return int
+     */
+    protected function countFrom(int $page, int $limit): int
+    {
+        return ($page - 1) * $limit;
     }
 }

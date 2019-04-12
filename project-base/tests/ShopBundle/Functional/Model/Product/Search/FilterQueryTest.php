@@ -97,6 +97,30 @@ class FilterQueryTest extends TransactionFunctionalTestCase
         $this->assertIdWithFilter($filter, [9, 144, 10, 145]);
     }
 
+    public function testPagination(): void
+    {
+        $filter = $this->createFilter();
+        $filter->filterByCategory([9]);
+
+        $this->assertIdWithFilter($filter, [72, 25, 27, 29, 28, 26, 50, 33, 39, 40]);
+
+        $filter->setLimit(5);
+        $this->assertIdWithFilter($filter, [72, 25, 27, 29, 28]);
+
+        $filter->setLimit(1);
+        $this->assertIdWithFilter($filter, [72]);
+
+        $filter->setLimit(4);
+        $filter->setPage(2);
+        $this->assertIdWithFilter($filter, [28, 26, 50, 33]);
+
+        $filter->setPage(3);
+        $this->assertIdWithFilter($filter, [39, 40]);
+
+        $filter->setPage(4);
+        $this->assertIdWithFilter($filter, []);
+    }
+
     /**
      * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
      * @param int[] $ids
