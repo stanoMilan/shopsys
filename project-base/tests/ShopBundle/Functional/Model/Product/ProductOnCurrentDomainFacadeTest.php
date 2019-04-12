@@ -200,5 +200,17 @@ abstract class ProductOnCurrentDomainFacadeTest extends TransactionFunctionalTes
      * @param \Shopsys\ShopBundle\Model\Category\Category $category
      * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
      */
-    abstract public function getPaginationResultInCategory(ProductFilterData $productFilterData, Category $category): PaginationResult;
+    public function getPaginationResultInCategory(ProductFilterData $productFilterData, Category $category): PaginationResult
+    {
+        return $this->getPaginationResultInCategoryWithPageAndLimit($productFilterData, $category, 1, 1000);
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param \Shopsys\ShopBundle\Model\Category\Category $category
+     * @param int $page
+     * @param int $limit
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    abstract public function getPaginationResultInCategoryWithPageAndLimit(ProductFilterData $productFilterData, Category $category, int $page, int $limit): PaginationResult;
 }

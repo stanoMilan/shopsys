@@ -15,14 +15,14 @@ class ProductOnCurrentDomainSqlFacadeTest extends ProductOnCurrentDomainFacadeTe
     /**
      * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
      * @param \Shopsys\ShopBundle\Model\Category\Category $category
+     * @param int $page
+     * @param int $limit
      * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
      */
-    public function getPaginationResultInCategory(ProductFilterData $productFilterData, Category $category): PaginationResult
+    public function getPaginationResultInCategoryWithPageAndLimit(ProductFilterData $productFilterData, Category $category, int $page, int $limit): PaginationResult
     {
         /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainFacade $productOnCurrentDomainFacade */
         $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainFacade::class);
-        $page = 1;
-        $limit = PHP_INT_MAX;
 
         return $productOnCurrentDomainFacade->getPaginatedProductsInCategory(
             $productFilterData,
