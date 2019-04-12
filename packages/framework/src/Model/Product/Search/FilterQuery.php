@@ -19,12 +19,16 @@ class FilterQuery
     /** @var array */
     protected $sorting = ['ordering_priority' => 'asc', 'name.keyword' => 'asc'];
 
+    /** @var array */
+    protected $match;
+
     /**
      * @param string $indexName
      */
     public function __construct(string $indexName)
     {
         $this->indexName = $indexName;
+        $this->match = $this->matchAll();
     }
 
     /**
@@ -214,6 +218,36 @@ class FilterQuery
     }
 
     /**
+     * @param string $text
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery
+     */
+    public function search(string $text): self
+    {
+        $this->match = [
+            'multi_match' => [
+                'query' => $text,
+                'fields' => [
+                    'name.full_with_diacritic^60',
+                    'name.full_without_diacritic^50',
+                    'name^45',
+                    'name.edge_ngram_with_diacritic^40',
+                    'name.edge_ngram_without_diacritic^35',
+                    'catnum^50',
+                    'catnum.edge_ngram^25',
+                    'partno^40',
+                    'partno.edge_ngram^20',
+                    'ean^60',
+                    'ean.edge_ngram^30',
+                    'short_description^5',
+                    'description^5',
+                ],
+            ],
+        ];
+
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getQuery(): array
@@ -224,18 +258,25 @@ class FilterQuery
             'size' => 1000,
             'body' => [
                 'sort' => $this->sorting,
-                'query' => ['bool' => [
-                    'must' => [
-                        'match_all' => new \stdClass(),
+                'query' => [
+                    'bool' => [
+                        'must' => $this->match,
+                        'filter' => $this->filters,
                     ],
-                    'filter' => [
-                        $this->filters,
-                    ],
-                ],
                 ],
             ],
         ];
 
         return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function matchAll(): array
+    {
+        return [
+            'match_all' => new \stdClass(),
+        ];
     }
 }

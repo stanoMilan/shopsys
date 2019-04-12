@@ -86,6 +86,17 @@ class FilterQueryTest extends TransactionFunctionalTestCase
         $this->assertIdWithFilter($filter, [72, 28, 27, 26, 25, 29, 39, 50, 33, 40], 'price desc');
     }
 
+    public function testMatchQuery(): void
+    {
+        $filter = $this->createFilter();
+
+        $filter->search('kitty');
+        $this->assertIdWithFilter($filter, [1, 102, 101]);
+
+        $filter->search('mg3550');
+        $this->assertIdWithFilter($filter, [9, 144, 10, 145]);
+    }
+
     /**
      * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
      * @param int[] $ids
