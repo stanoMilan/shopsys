@@ -5,6 +5,9 @@ namespace Shopsys\FrameworkBundle\Model\Product\Search;
 use Doctrine\ORM\QueryBuilder;
 use Elasticsearch\Client;
 use Shopsys\FrameworkBundle\Component\Elasticsearch\ElasticsearchStructureManager;
+use Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup;
+use Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData;
+use Shopsys\FrameworkBundle\Model\Product\Parameter\ParameterValue;
 
 class ProductElasticsearchRepository
 {
@@ -126,6 +129,84 @@ class ProductElasticsearchRepository
     }
 
     /**
+     * @param int $domainId
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $orderingModeId
+     * @param int $categoryId
+     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
+     * @param int $page
+     * @param int $limit
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\ResultIdsData
+     */
+    public function getSortedProductIdsByFilterDataFromCategory(
+        int $domainId,
+        ProductFilterData $productFilterData,
+        string $orderingModeId,
+        int $categoryId,
+        PricingGroup $pricingGroup,
+        int $page,
+        int $limit
+    ): ResultIdsData {
+        $filterQuery = $this->createFilterQuery($this->getIndexName($domainId), $productFilterData, $orderingModeId, $pricingGroup);
+        $filterQuery->filterByCategory([$categoryId]);
+
+        $filterQuery->setPage($page);
+        $filterQuery->setLimit($limit);
+
+        $result = $this->client->search($filterQuery->getQuery());
+
+        return new ResultIdsData($this->extractTotalCount($result), $this->extractIds($result));
+    }
+
+    /**
+     * @param string $indexName
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $orderingModeId
+     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery
+     */
+    protected function createFilterQuery(string $indexName, ProductFilterData $productFilterData, string $orderingModeId, PricingGroup $pricingGroup): FilterQuery
+    {
+        $filterQuery = new FilterQuery($indexName);
+
+        $filterQuery->filterOnlySellable();
+
+        $brandIds = [];
+        foreach ($productFilterData->brands as $brand) {
+            $brandIds[] = $brand->getId();
+        }
+        if ($brandIds) {
+            $filterQuery->filterByBrands($brandIds);
+        }
+
+        $flagIds = [];
+        foreach ($productFilterData->flags as $flag) {
+            $flagIds[] = $flag->getId();
+        }
+        if ($flagIds) {
+            $filterQuery->filterByFlags($flagIds);
+        }
+
+        if ($productFilterData->parameters) {
+            $parameters = $this->flattenParameterFilterData($productFilterData->parameters);
+
+            $filterQuery->filterByParameters($parameters);
+        }
+
+        if ($productFilterData->inStock) {
+            $filterQuery->filterOnlyInStock();
+        }
+
+        if ($productFilterData->maximalPrice || $productFilterData->minimalPrice) {
+            $filterQuery->filterByPrices($pricingGroup, $productFilterData->minimalPrice, $productFilterData->maximalPrice);
+        }
+
+        $filterQuery->applyOrdering($orderingModeId, $pricingGroup);
+
+        return $filterQuery;
+    }
+
+    /**
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html
      * @param string $indexName
      * @param string $searchText
@@ -146,6 +227,15 @@ class ProductElasticsearchRepository
     {
         $hits = $result['hits']['hits'];
         return array_column($hits, '_id');
+    }
+
+    /**
+     * @param array $result
+     * @return int
+     */
+    protected function extractTotalCount(array $result): int
+    {
+        return (int)$result['hits']['total'];
     }
 
     /**
@@ -186,5 +276,33 @@ class ProductElasticsearchRepository
                 ],
             ],
         ]);
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ParameterFilterData[] $parameters
+     * @return array
+     */
+    protected function flattenParameterFilterData(array $parameters): array
+    {
+        $return = [];
+
+        foreach ($parameters as $parameterFilterData) {
+            /* @var $parameterFilterData \Shopsys\FrameworkBundle\Model\Product\Filter\ParameterFilterData */
+            if (\count($parameterFilterData->values) === 0) {
+                continue;
+            }
+
+            foreach ($parameters as $parameter) {
+                $return[$parameter->parameter->getId()] =
+                    \array_map(
+                        static function (ParameterValue $item) {
+                            return $item->getId();
+                        },
+                        $parameter->values
+                    );
+            }
+        }
+
+        return $return;
     }
 }

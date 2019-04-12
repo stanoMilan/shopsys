@@ -537,6 +537,26 @@ class ProductRepository
     }
 
     /**
+     * @param int[] $sortedProductIds
+     * @return \Shopsys\FrameworkBundle\Model\Product\Product[]
+     */
+    public function getAllBySortedIds(array $sortedProductIds): array
+    {
+        if (\count($sortedProductIds) === 0) {
+            return [];
+        }
+
+        $queryBuilder = $this->getProductRepository()->createQueryBuilder('p');
+
+        $queryBuilder->andWhere('p.id IN (:productIds)')
+            ->setParameter('productIds', $sortedProductIds)
+            ->addSelect('field(p.id, ' . implode(',', $sortedProductIds) . ') AS HIDDEN relevance')
+            ->orderBy('relevance');
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
      * @param int $id
      * @param int $domainId
      * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
