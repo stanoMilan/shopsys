@@ -14,22 +14,21 @@ class VolumeDriver extends Driver
     {
         @parent::configure();
 
-        // set thumbnails path
-        $path = $this->options['tmbPath'];
+        $thumbnailPath = $this->options['tmbPath'];
 
-        if ($path) {
-            if (!$this->fs->has($path)) {
-                if ($this->_mkdir($path, '')) {
-                    $this->_chmod($path, $this->options['tmbPathMode']);
+        if ($thumbnailPath) {
+            if (!$this->fs->has($thumbnailPath)) {
+                if ($this->_mkdir($thumbnailPath, '')) {
+                    $this->_chmod($thumbnailPath, $this->options['tmbPathMode']);
                 } else {
-                    $path = '';
+                    $thumbnailPath = '';
                 }
             }
 
-            $stat = $this->_stat($path);
+            $stat = $this->_stat($thumbnailPath);
 
-            if ($this->_dirExists($path) && $stat['read']) {
-                $this->tmbPath = $path;
+            if ($this->_dirExists($thumbnailPath) && $stat['read']) {
+                $this->tmbPath = $thumbnailPath;
                 $this->tmbPathWritable = $stat['write'];
             }
         }
@@ -39,21 +38,22 @@ class VolumeDriver extends Driver
 
     /**
      * @param string $hash
+     * @return false|string
      */
     public function tmb($hash)
     {
-        $path = $this->decode($hash);
-        $stat = $this->_stat($path, $hash);
+        $thumbnailPath = $this->decode($hash);
+        $stat = $this->_stat($thumbnailPath, $hash);
 
         if (isset($stat['tmb'])) {
-            $res = $stat['tmb'] == '1' ? $this->createTmb($path, $stat) : $stat['tmb'];
+            $res = $stat['tmb'] == '1' ? $this->createTmb($thumbnailPath, $stat) : $stat['tmb'];
 
             if (!$res) {
                 list($type) = explode('/', $stat['mime']);
                 $fallback = $this->options['resourcePath'] . DIRECTORY_SEPARATOR . strtolower($type) . '.png';
                 if (is_file($fallback)) {
                     $res = $this->tmbname($stat);
-                    if (!$this->fs->put($fallback, $this->tmbPath . DIRECTORY_SEPARATOR . $res)) {
+                    if (!$this->fs->put($fallback, $this->createThumbnailPath($res))) {
                         $res = false;
                     }
                 }
@@ -64,20 +64,21 @@ class VolumeDriver extends Driver
     }
 
     /**
-     * @param string $path
+     * @param string $thumbnailPath
      * @param array $stat
+     * @return false|string
      */
-    protected function gettmb($path, $stat)
+    protected function gettmb($thumbnailPath, $stat)
     {
         if ($this->tmbURL && $this->tmbPath) {
             // file itself thumnbnail
-            if (strpos($path, $this->tmbPath) === 0) {
-                return basename($path);
+            if (strpos($thumbnailPath, $this->tmbPath) === 0) {
+                return basename($thumbnailPath);
             }
 
             $stat['hash'] = $stat['hash'] ?? '';
             $name = $this->tmbname($stat);
-            if ($this->fs->has($this->tmbPath . DIRECTORY_SEPARATOR . $name)) {
+            if ($this->fs->has($this->createThumbnailPath($name))) {
                 return $name;
             }
         }
@@ -85,24 +86,36 @@ class VolumeDriver extends Driver
     }
 
     /**
-     * @param string $path
-     * @param array $stat
+     * @param string $name
+     * @return string
      */
-    protected function createTmb($path, $stat)
+    public function createThumbnailPath($name)
     {
-        $tmpTmbPath = $this->tmbPath;
-        $this->tmbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpTmbPath;
+        return $this->tmbPath . DIRECTORY_SEPARATOR . $name;
+    }
+
+    /**
+     * @param string $thumbnailPath
+     * @param array $stat
+     * @return false|string
+     */
+    protected function createTmb($thumbnailPath, $stat)
+    {
+        $tmpThumbnailPath = $this->tmbPath;
+        $this->tmbPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $tmpThumbnailPath;
         @mkdir($this->tmbPath, 0777, true);
 
-        $name = parent::createTmb($path, $stat);
+        $name = parent::createTmb($thumbnailPath, $stat);
         if ($name !== false) {
-            $fp = fopen($this->tmbPath . DIRECTORY_SEPARATOR . $name, 'rb');
+            $fp = fopen($this->createThumbnailPath($name), 'rb');
             if ($fp === false) {
                 return false;
             }
-            $this->_save($fp, $tmpTmbPath, $name, $stat);
-            unlink($this->tmbPath . DIRECTORY_SEPARATOR . $name);
+            $this->_save($fp, $tmpThumbnailPath, $name, $stat);
+            unlink($this->createThumbnailPath($name));
         }
+
+        return $name;
     }
 
     /**
@@ -112,8 +125,8 @@ class VolumeDriver extends Driver
     {
         $path = $stat['realpath'];
         if ($this->tmbURL) {
-            $tmb = $this->gettmb($path, $stat);
-            $stat['tmb'] = $tmb ? $tmb : 1;
+            $thumbnailName = $this->gettmb($path, $stat);
+            $stat['tmb'] = $thumbnailName ? $thumbnailName : 1;
         }
 
         if ($this->tmbPathWritable) {
@@ -124,8 +137,8 @@ class VolumeDriver extends Driver
                     $name != '.' && $name != '..' && $this->rmTmb($this->stat($p));
                 }
             } elseif (!empty($stat['tmb']) && $stat['tmb'] != '1') {
-                $tmb = $this->tmbPath . DIRECTORY_SEPARATOR . rawurldecode($stat['tmb']);
-                $this->_unlink($tmb);
+                $thumbnailPath = $this->createThumbnailPath(rawurldecode($stat['tmb']));
+                $this->_unlink($thumbnailPath);
                 clearstatcache();
             }
         }
@@ -143,9 +156,10 @@ class VolumeDriver extends Driver
         }
 
         if ($this->tmbURL && !isset($stat['tmb']) && $this->canCreateTmb($path, $stat)) {
-            $tmb = $this->gettmb($path, $stat);
-            $stat['tmb'] = $tmb ? $tmb : 1;
+            $thumbnailName = $this->gettmb($path, $stat);
+            $stat['tmb'] = $thumbnailName ? $thumbnailName : 1;
         }
+
         return $stat;
     }
 }
