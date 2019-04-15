@@ -40,8 +40,8 @@ class ProductOnCurrentDomainElasticFacadeTest extends ProductOnCurrentDomainFaca
     {
         /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
         $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
-        $page = 0;
-        $limit = PHP_INT_MAX;
+        $page = 1;
+        $limit = 1000;
 
         return $productOnCurrentDomainFacade->getPaginatedProductsForBrand(
             ProductListOrderingConfig::ORDER_BY_NAME_ASC,
@@ -60,8 +60,8 @@ class ProductOnCurrentDomainElasticFacadeTest extends ProductOnCurrentDomainFaca
     {
         /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
         $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
-        $page = 0;
-        $limit = PHP_INT_MAX;
+        $page = 1;
+        $limit = 1000;
 
         return $productOnCurrentDomainFacade->getPaginatedProductsForSearch(
             $searchText,
@@ -80,7 +80,7 @@ class ProductOnCurrentDomainElasticFacadeTest extends ProductOnCurrentDomainFaca
     {
         /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
         $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
-        $limit = PHP_INT_MAX;
+        $limit = 1000;
 
         return $productOnCurrentDomainFacade->getSearchAutocompleteProducts(
             $searchText,
