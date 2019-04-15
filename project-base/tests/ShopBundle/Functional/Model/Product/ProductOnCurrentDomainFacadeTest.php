@@ -4,6 +4,7 @@ namespace Tests\ShopBundle\Functional\Model\Product;
 
 use Shopsys\FrameworkBundle\Component\Money\Money;
 use Shopsys\FrameworkBundle\Component\Paginator\PaginationResult;
+use Shopsys\FrameworkBundle\Model\Product\Brand\Brand;
 use Shopsys\FrameworkBundle\Model\Product\Filter\ParameterFilterData;
 use Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData;
 use Shopsys\FrameworkBundle\Model\Product\Parameter\ParameterRepository;
@@ -233,4 +234,54 @@ abstract class ProductOnCurrentDomainFacadeTest extends TransactionFunctionalTes
      * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
      */
     abstract public function getPaginationResultInCategoryWithPageAndLimit(ProductFilterData $productFilterData, Category $category, int $page, int $limit): PaginationResult;
+
+    public function testGetProductsForBrand(): void
+    {
+        $brand = $this->getReference(BrandDataFixture::BRAND_CANON);
+
+        $paginationResult = $this->getPaginatedProductsForBrand($brand);
+
+        $this->assertCount(10, $paginationResult->getResults());
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Brand\Brand $brand
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    abstract public function getPaginatedProductsForBrand(Brand $brand): PaginationResult;
+
+    public function testGetPaginatedProductsForSearchWithFlagsAndBrand(): void
+    {
+        $productFilterData = new ProductFilterData();
+
+        $flagTopProduct = $this->getReference(FlagDataFixture::FLAG_NEW_PRODUCT);
+        $productFilterData->flags = [$flagTopProduct];
+
+        $brandCanon = $this->getReference(BrandDataFixture::BRAND_CANON);
+        $productFilterData->brands = [$brandCanon];
+
+        $paginationResult = $this->getPaginationResultInSearch($productFilterData, 'mg3550');
+
+        $this->assertCount(3, $paginationResult->getResults());
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $searchText
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    abstract public function getPaginationResultInSearch(ProductFilterData $productFilterData, string $searchText): PaginationResult;
+
+    public function testGetSearchAutocompleteProducts(): void
+    {
+        $paginationResult = $this->getSearchAutocompleteProducts('mg3550');
+
+        $this->assertCount(4, $paginationResult->getResults());
+    }
+
+    /**
+     * @param string $searchText
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    abstract public function getSearchAutocompleteProducts(string $searchText): PaginationResult;
 }

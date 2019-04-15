@@ -3,6 +3,7 @@
 namespace Tests\ShopBundle\Functional\Model\Product;
 
 use Shopsys\FrameworkBundle\Component\Paginator\PaginationResult;
+use Shopsys\FrameworkBundle\Model\Product\Brand\Brand;
 use Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData;
 use Shopsys\FrameworkBundle\Model\Product\Listing\ProductListOrderingConfig;
 use Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade;
@@ -19,7 +20,7 @@ class ProductOnCurrentDomainElasticFacadeTest extends ProductOnCurrentDomainFaca
      */
     public function getPaginationResultInCategoryWithPageAndLimit(ProductFilterData $productFilterData, Category $category, int $page, int $limit): PaginationResult
     {
-        /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainFacade $productOnCurrentDomainFacade */
+        /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
         $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
 
         return $productOnCurrentDomainFacade->getPaginatedProductsInCategory(
@@ -28,6 +29,62 @@ class ProductOnCurrentDomainElasticFacadeTest extends ProductOnCurrentDomainFaca
             $page,
             $limit,
             $category->getId()
+        );
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Brand\Brand $brand
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    public function getPaginatedProductsForBrand(Brand $brand): PaginationResult
+    {
+        /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
+        $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
+        $page = 0;
+        $limit = PHP_INT_MAX;
+
+        return $productOnCurrentDomainFacade->getPaginatedProductsForBrand(
+            ProductListOrderingConfig::ORDER_BY_NAME_ASC,
+            $page,
+            $limit,
+            $brand->getId()
+        );
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $searchText
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    public function getPaginationResultInSearch(ProductFilterData $productFilterData, string $searchText): PaginationResult
+    {
+        /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
+        $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
+        $page = 0;
+        $limit = PHP_INT_MAX;
+
+        return $productOnCurrentDomainFacade->getPaginatedProductsForSearch(
+            $searchText,
+            $productFilterData,
+            ProductListOrderingConfig::ORDER_BY_NAME_ASC,
+            $page,
+            $limit
+        );
+    }
+
+    /**
+     * @param string $searchText
+     * @return \Shopsys\FrameworkBundle\Component\Paginator\PaginationResult
+     */
+    public function getSearchAutocompleteProducts(string $searchText): PaginationResult
+    {
+        /** @var \Shopsys\FrameworkBundle\Model\Product\ProductOnCurrentDomainElasticFacade $productOnCurrentDomainFacade */
+        $productOnCurrentDomainFacade = $this->getContainer()->get(ProductOnCurrentDomainElasticFacade::class);
+        $limit = PHP_INT_MAX;
+
+        return $productOnCurrentDomainFacade->getSearchAutocompleteProducts(
+            $searchText,
+            $limit
         );
     }
 }
