@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Shopsys\FrameworkBundle\Model\Product\Search;
 
 use Doctrine\ORM\QueryBuilder;
@@ -147,15 +149,90 @@ class ProductElasticsearchRepository
         int $page,
         int $limit
     ): ResultIdsData {
-        $filterQuery = $this->createFilterQuery($this->getIndexName($domainId), $productFilterData, $orderingModeId, $pricingGroup);
-        $filterQuery->filterByCategory([$categoryId]);
+        $filterQuery = $this->getSortedPaginatedFilterQuery($domainId, $productFilterData, $orderingModeId, $pricingGroup, $page, $limit);
 
-        $filterQuery->setPage($page);
-        $filterQuery->setLimit($limit);
+        $filterQuery->filterByCategory([$categoryId]);
 
         $result = $this->client->search($filterQuery->getQuery());
 
         return new ResultIdsData($this->extractTotalCount($result), $this->extractIds($result));
+    }
+
+    /**
+     * @param int $domainId
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $orderingModeId
+     * @param string $searchText
+     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
+     * @param int $page
+     * @param int $limit
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\ResultIdsData
+     */
+    public function getSortedProductIdsByFilterDataAndSearchText(
+        int $domainId,
+        ProductFilterData $productFilterData,
+        string $orderingModeId,
+        string $searchText,
+        PricingGroup $pricingGroup,
+        int $page,
+        int $limit
+    ): ResultIdsData {
+        $filterQuery = $this->getSortedPaginatedFilterQuery($domainId, $productFilterData, $orderingModeId, $pricingGroup, $page, $limit);
+
+        $filterQuery->search($searchText);
+
+        $result = $this->client->search($filterQuery->getQuery());
+
+        return new ResultIdsData($this->extractTotalCount($result), $this->extractIds($result));
+    }
+
+    /**
+     * @param int $domainId
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $orderingModeId
+     * @param int $brandId
+     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
+     * @param int $page
+     * @param int $limit
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\ResultIdsData
+     */
+    public function getSortedProductIdsByFilterDataForBrand(
+        int $domainId,
+        ProductFilterData $productFilterData,
+        string $orderingModeId,
+        int $brandId,
+        PricingGroup $pricingGroup,
+        int $page,
+        int $limit
+    ): ResultIdsData {
+        $filterQuery = $this->getSortedPaginatedFilterQuery($domainId, $productFilterData, $orderingModeId, $pricingGroup, $page, $limit);
+
+        $filterQuery->filterByBrands([$brandId]);
+
+        $result = $this->client->search($filterQuery->getQuery());
+
+        return new ResultIdsData($this->extractTotalCount($result), $this->extractIds($result));
+    }
+
+    /**
+     * @param int $domainId
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param string $orderingModeId
+     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
+     * @param int $page
+     * @param int $limit
+     * @return \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery
+     */
+    protected function getSortedPaginatedFilterQuery(int $domainId, ProductFilterData $productFilterData, string $orderingModeId, PricingGroup $pricingGroup, int $page, int $limit): FilterQuery
+    {
+        $filterQuery = $this->createFilterQuery($this->getIndexName($domainId), $productFilterData, $orderingModeId, $pricingGroup);
+
+        $filterQuery->filterOnlySellable();
+
+        $filterQuery->setPage($page);
+        $filterQuery->setLimit($limit);
+
+        return $filterQuery;
     }
 
     /**
@@ -168,8 +245,6 @@ class ProductElasticsearchRepository
     protected function createFilterQuery(string $indexName, ProductFilterData $productFilterData, string $orderingModeId, PricingGroup $pricingGroup): FilterQuery
     {
         $filterQuery = new FilterQuery($indexName);
-
-        $filterQuery->filterOnlySellable();
 
         $brandIds = [];
         foreach ($productFilterData->brands as $brand) {
@@ -292,15 +367,13 @@ class ProductElasticsearchRepository
                 continue;
             }
 
-            foreach ($parameters as $parameter) {
-                $return[$parameter->parameter->getId()] =
-                    \array_map(
-                        static function (ParameterValue $item) {
-                            return $item->getId();
-                        },
-                        $parameter->values
-                    );
-            }
+            $return[$parameterFilterData->parameter->getId()] =
+                \array_map(
+                    static function (ParameterValue $item) {
+                        return $item->getId();
+                    },
+                    $parameterFilterData->values
+                );
         }
 
         return $return;

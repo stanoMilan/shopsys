@@ -10,6 +10,7 @@ use Shopsys\FrameworkBundle\Model\Customer\CurrentCustomer;
 use Shopsys\FrameworkBundle\Model\Product\Accessory\ProductAccessoryRepository;
 use Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterConfig;
 use Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData;
+use Shopsys\FrameworkBundle\Model\Product\Listing\ProductListOrderingConfig;
 use Shopsys\FrameworkBundle\Model\Product\Search\ProductElasticsearchRepository;
 
 class ProductOnCurrentDomainElasticFacade implements ProductOnCurrentDomainFacadeInterface
@@ -119,7 +120,19 @@ class ProductOnCurrentDomainElasticFacade implements ProductOnCurrentDomainFacad
      */
     public function getPaginatedProductsForBrand($orderingModeId, $page, $limit, $brandId)
     {
-        // TODO: Implement getPaginatedProductsForBrand() method.
+        $emptyProductFilterData = new ProductFilterData();
+
+        $productIds = $this->productElasticsearchRepository->getSortedProductIdsByFilterDataForBrand(
+            $this->domain->getId(),
+            $emptyProductFilterData,
+            $orderingModeId,
+            $brandId,
+            $this->currentCustomer->getPricingGroup(),
+            $page,
+            $limit
+        );
+
+        return new PaginationResult($page, $limit, $productIds->getTotal(), $this->productRepository->getAllBySortedIds($productIds->getIds()));
     }
 
     /**
@@ -127,7 +140,17 @@ class ProductOnCurrentDomainElasticFacade implements ProductOnCurrentDomainFacad
      */
     public function getPaginatedProductsForSearch($searchText, ProductFilterData $productFilterData, $orderingModeId, $page, $limit)
     {
-        // TODO: Implement getPaginatedProductsForSearch() method.
+        $productIds = $this->productElasticsearchRepository->getSortedProductIdsByFilterDataAndSearchText(
+            $this->domain->getId(),
+            $productFilterData,
+            $orderingModeId,
+            $searchText,
+            $this->currentCustomer->getPricingGroup(),
+            $page,
+            $limit
+        );
+
+        return new PaginationResult($page, $limit, $productIds->getTotal(), $this->productRepository->getAllBySortedIds($productIds->getIds()));
     }
 
     /**
@@ -135,7 +158,10 @@ class ProductOnCurrentDomainElasticFacade implements ProductOnCurrentDomainFacad
      */
     public function getSearchAutocompleteProducts($searchText, $limit)
     {
-        // TODO: Implement getSearchAutocompleteProducts() method.
+        $emptyProductFilterData = new ProductFilterData();
+        $page = 1;
+
+        return $this->getPaginatedProductsForSearch($searchText, $emptyProductFilterData, ProductListOrderingConfig::ORDER_BY_RELEVANCE, $page, $limit);
     }
 
     /**
