@@ -246,6 +246,22 @@ class ProductElasticsearchRepository
     {
         $filterQuery = new FilterQuery($indexName);
 
+        $this->addBrandsToQuery($productFilterData, $filterQuery);
+        $this->addFlagsToQuery($productFilterData, $filterQuery);
+        $this->addParametersToQuery($productFilterData, $filterQuery);
+        $this->addStockToQuery($productFilterData, $filterQuery);
+        $this->addPricesToQuery($productFilterData, $filterQuery, $pricingGroup);
+        $filterQuery->applyOrdering($orderingModeId, $pricingGroup);
+
+        return $filterQuery;
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
+     */
+    protected function addBrandsToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
+    {
         $brandIds = [];
         foreach ($productFilterData->brands as $brand) {
             $brandIds[] = $brand->getId();
@@ -253,7 +269,14 @@ class ProductElasticsearchRepository
         if ($brandIds) {
             $filterQuery->filterByBrands($brandIds);
         }
+    }
 
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
+     */
+    protected function addFlagsToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
+    {
         $flagIds = [];
         foreach ($productFilterData->flags as $flag) {
             $flagIds[] = $flag->getId();
@@ -261,24 +284,42 @@ class ProductElasticsearchRepository
         if ($flagIds) {
             $filterQuery->filterByFlags($flagIds);
         }
+    }
 
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
+     */
+    protected function addParametersToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
+    {
         if ($productFilterData->parameters) {
             $parameters = $this->flattenParameterFilterData($productFilterData->parameters);
 
             $filterQuery->filterByParameters($parameters);
         }
+    }
 
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
+     */
+    protected function addStockToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
+    {
         if ($productFilterData->inStock) {
             $filterQuery->filterOnlyInStock();
         }
+    }
 
+    /**
+     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
+     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
+     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
+     */
+    protected function addPricesToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery, PricingGroup $pricingGroup): void
+    {
         if ($productFilterData->maximalPrice || $productFilterData->minimalPrice) {
             $filterQuery->filterByPrices($pricingGroup, $productFilterData->minimalPrice, $productFilterData->maximalPrice);
         }
-
-        $filterQuery->applyOrdering($orderingModeId, $pricingGroup);
-
-        return $filterQuery;
     }
 
     /**
