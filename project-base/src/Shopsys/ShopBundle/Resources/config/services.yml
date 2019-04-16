@@ -96,3 +96,9 @@ services:
     Shopsys\ShopBundle\Model\AdvancedSearch\ProductAdvancedSearchConfig: ~
 
     Shopsys\FrameworkBundle\Model\AdvancedSearch\ProductAdvancedSearchConfig: '@Shopsys\ShopBundle\Model\AdvancedSearch\ProductAdvancedSearchConfig'
+
+    Shopsys\FrameworkBundle\Model\Product\BestsellingProduct\BestsellingProductFacade: '@Shopsys\ShopBundle\Model\Product\BestsellingProductFacade'
+
+    Shopsys\ShopBundle\Model\Product\PriceExtension: ~
+
+    Shopsys\FrameworkBundle\Twig\PriceExtension: '@Shopsys\ShopBundle\Model\Product\PriceExtension'
