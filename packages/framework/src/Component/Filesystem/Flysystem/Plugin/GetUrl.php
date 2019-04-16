@@ -9,7 +9,7 @@ class GetUrl extends BaseGetUrl
     /**
      * @var mixed[]
      */
-    private $options;
+    protected $options;
 
     /**
      * @param mixed[] $options
