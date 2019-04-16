@@ -172,7 +172,10 @@ services:
 
     Shopsys\FrameworkBundle\Model\Pricing\Vat\VatFacade: ~
 
-    Shopsys\FrameworkBundle\Model\Product\Search\Export\ProductSearchExportRepository: ~
+    Shopsys\FrameworkBundle\Model\Product\Search\Export\ProductSearchExportRepository:
+        calls:
+            -   method: setParameterRepository
+            -   method: setProductFacade
 
     Shopsys\FrameworkBundle\Model\Product\Pricing\ProductManualInputPriceFacade: ~
 

@@ -917,6 +917,11 @@ services:
 
     Shopsys\FrameworkBundle\Model\Product\Search\Export\ProductSearchExportDataConverter: ~
 
+    Shopsys\FrameworkBundle\Model\Product\Search\Export\ProductSearchExportRepository:
+        calls:
+            - method: setParameterRepository
+            - method: setProductFacade
+
     Shopsys\FrameworkBundle\Model\Sitemap\SitemapFilePrefixer: ~
 
     Shopsys\FrameworkBundle\Model\Product\BestsellingProduct\BestsellingProductCombinator: ~

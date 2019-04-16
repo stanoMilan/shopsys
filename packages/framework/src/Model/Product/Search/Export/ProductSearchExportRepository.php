@@ -2,6 +2,7 @@
 
 namespace Shopsys\FrameworkBundle\Model\Product\Search\Export;
 
+use BadMethodCallException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -29,13 +30,31 @@ class ProductSearchExportRepository
 
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $em
-     * @param \Shopsys\FrameworkBundle\Model\Product\Parameter\ParameterRepository $parameterRepository
-     * @param \Shopsys\FrameworkBundle\Model\Product\ProductFacade $productFacade
      */
-    public function __construct(EntityManagerInterface $em, ParameterRepository $parameterRepository, ProductFacade $productFacade)
+    public function __construct(EntityManagerInterface $em)
     {
         $this->em = $em;
+    }
+
+    /**
+     * Setter injection for ParameterRepository to maintain backward compatibility
+     *
+     * @param \Shopsys\FrameworkBundle\Model\Product\Parameter\ParameterRepository $parameterRepository
+     * @deprecated Will be replaced with constructor injection in the next major release
+     */
+    public function setParameterRepository(ParameterRepository $parameterRepository): void
+    {
         $this->parameterRepository = $parameterRepository;
+    }
+
+    /**
+     * Setter injection for ProductFacade to maintain backward compatibility
+     *
+     * @param \Shopsys\FrameworkBundle\Model\Product\ProductFacade $productFacade
+     * @deprecated Will be replaced with constructor injection in the next major release
+     */
+    public function setProductFacade(ProductFacade $productFacade): void
+    {
         $this->productFacade = $productFacade;
     }
 
@@ -148,6 +167,10 @@ class ProductSearchExportRepository
      */
     protected function extractParameters(string $locale, Product $product): array
     {
+        if ($this->parameterRepository === null) {
+            throw new BadMethodCallException(\sprintf('Class of type "%s" has to be set with "%s::injectParameterRepository" method in dependency injection container.', ParameterRepository::class, self::class));
+        }
+
         $parameters = [];
         $productParameterValues = $this->parameterRepository->getProductParameterValuesByProductSortedByName($product, $locale);
         foreach ($productParameterValues as $index => $productParameterValue) {
@@ -171,6 +194,10 @@ class ProductSearchExportRepository
      */
     protected function extractPrices(int $domainId, Product $product): array
     {
+        if ($this->parameterRepository === null) {
+            throw new BadMethodCallException(\sprintf('Class of type "%s" has to be set with "%s::injectProductFacade" method in dependency injection container.', ProductFacade::class, self::class));
+        }
+
         $prices = [];
         $productSellingPrices = $this->productFacade->getAllProductSellingPricesIndexedByDomainId($product)[$domainId];
         /** @var \Shopsys\FrameworkBundle\Model\Product\Pricing\ProductSellingPrice $productSellingPrice */
