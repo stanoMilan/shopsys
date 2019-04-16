@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Shopsys\ShopBundle\Component\Flysystem;
 
 use Barryvdh\elFinderFlysystemDriver\Driver;
@@ -65,7 +63,7 @@ class VolumeDriver extends Driver
 
     /**
      * @param string $thumbnailPath
-     * @param array $stat
+     * @param mixed[] $stat
      * @return false|string
      */
     protected function gettmb($thumbnailPath, $stat)
@@ -96,7 +94,7 @@ class VolumeDriver extends Driver
 
     /**
      * @param string $thumbnailPath
-     * @param array $stat
+     * @param mixed[] $stat
      * @return false|string
      */
     protected function createTmb($thumbnailPath, $stat)
@@ -119,7 +117,7 @@ class VolumeDriver extends Driver
     }
 
     /**
-     * @param array $stat
+     * @param mixed[] $stat
      */
     protected function rmTmb($stat)
     {
@@ -147,6 +145,7 @@ class VolumeDriver extends Driver
     /**
      * @param string $path
      * @param string $hash
+     * @return false|mixed[]
      */
     protected function _stat($path, $hash = '')
     {

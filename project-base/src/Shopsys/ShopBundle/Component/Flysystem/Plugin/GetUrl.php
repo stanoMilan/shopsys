@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Shopsys\ShopBundle\Component\Flysystem\Plugin;
 
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl as BaseGetUrl;
@@ -9,14 +7,14 @@ use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl as BaseGetUrl;
 class GetUrl extends BaseGetUrl
 {
     /**
-     * @var array
+     * @var mixed[]
      */
     private $options;
 
     /**
-     * @param array $options
+     * @param mixed[] $options
      */
-    public function __construct(array $options = null)
+    public function __construct($options = [])
     {
         $this->options = $options;
     }
@@ -29,7 +27,7 @@ class GetUrl extends BaseGetUrl
      */
     protected function getFromMethod($path)
     {
-        if (!empty($this->options['URL'])) {
+        if (!isset($this->options['URL'])) {
             return $this->options['URL'] . str_replace($this->options['path'], '', $path);
         }
 
