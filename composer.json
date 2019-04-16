@@ -22,11 +22,11 @@
       "Shopsys\\FrameworkBundle\\": "packages/framework/src/"
     },
     "classmap": [
+      "packages/framework/src/Component/Filesystem/Flysystem/VolumeDriver.php",
       "project-base/app/AppCache.php",
       "project-base/app/AppKernel.php",
       "project-base/app/Bootstrap.php",
-      "project-base/app/Environment.php",
-      "project-base/app/elFinderVolumeFlysystem.php"
+      "project-base/app/Environment.php"
     ],
     "files": [
       "packages/framework/src/Component/Translation/functions.php",

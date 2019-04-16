@@ -1,6 +1,6 @@
 <?php
 
-namespace Shopsys\ShopBundle\Component\Flysystem\Plugin;
+namespace Shopsys\FrameworkBundle\Component\Filesystem\Flysystem\Plugin;
 
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl as BaseGetUrl;
 

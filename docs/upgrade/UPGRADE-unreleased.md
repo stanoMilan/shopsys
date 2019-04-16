@@ -32,10 +32,7 @@ There you can find links to upgrade notes for other versions too.
     +           pattern: '/^\/web\/content\/wysiwyg\/_thumbnails$/'
                 hidden: true
     ```
-    - download [`app/elFinderVolumeFlysystem.php`](https://github.com/shopsys/project-base/blob/master/app/elFinderVolumeFlysystem.php)
-    - download the whole folder [`src/Shopsys/ShopBundle/Component/Flysystem`](https://github.com/shopsys/project-base/tree/master/src/Shopsys/ShopBundle/Component/Flysystem)
-    - add `app/elFinderVolumeFlysystem.php` into classmap of `composer.json`
-    - read the section about proxying the URL content subpats via webserver domain [`docs/introduction/abstract-filesystem.md`](https://github.com/shopsys/shopsys/blob/master/docs/introduction/abstract-filesystem.md)
+    - read the section about proxying the URL content subpaths via webserver domain [`docs/introduction/abstract-filesystem.md`](https://github.com/shopsys/shopsys/blob/master/docs/introduction/abstract-filesystem.md)
 
 [Upgrade from v7.1.0 to Unreleased]: https://github.com/shopsys/shopsys/compare/v7.1.0...HEAD
 [shopsys/framework]: https://github.com/shopsys/framework

@@ -1,10 +1,10 @@
 <?php
 
-namespace Shopsys\ShopBundle\Component\Flysystem;
+namespace Shopsys\FrameworkBundle\Component\Filesystem\Flysystem;
 
 use Barryvdh\elFinderFlysystemDriver\Driver;
 use elFinder;
-use Shopsys\ShopBundle\Component\Flysystem\Plugin\GetUrl;
+use Shopsys\FrameworkBundle\Component\Filesystem\Flysystem\Plugin\GetUrl;
 
 class VolumeDriver extends Driver
 {
@@ -162,3 +162,5 @@ class VolumeDriver extends Driver
         return $stat;
     }
 }
+
+class_alias(VolumeDriver::class, 'elFinderVolumeFlysystem');
