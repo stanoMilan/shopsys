@@ -6,6 +6,7 @@ use Shopsys\FrameworkBundle\Component\Domain\Domain;
 use Shopsys\FrameworkBundle\Component\Image\ImageFacade;
 use Shopsys\FrameworkBundle\Component\Image\ImageLocator;
 use Shopsys\FrameworkBundle\Component\Utils\Utils;
+use Shopsys\FrameworkBundle\ReadModel\Image\ImageView;
 use Symfony\Bundle\FrameworkBundle\Templating\EngineInterface;
 use Twig_Extension;
 use Twig_SimpleFunction;
@@ -91,13 +92,26 @@ class ImageExtension extends Twig_Extension
     }
 
     /**
-     * @param \Shopsys\FrameworkBundle\Component\Image\Image|Object $imageOrEntity
+     * @param \Shopsys\FrameworkBundle\Component\Image\Image|\Shopsys\FrameworkBundle\ReadModel\Image\ImageView|Object|null $imageOrEntity
      * @param string|null $sizeName
      * @param string|null $type
      * @return string
      */
     public function getImageUrl($imageOrEntity, $sizeName = null, $type = null)
     {
+        if ($imageOrEntity instanceof ImageView) {
+            return $this->imageFacade->getImageUrlFromAttributes(
+                $this->domain->getCurrentDomainConfig(),
+                $imageOrEntity->getId(),
+                $imageOrEntity->getExtension(),
+                $imageOrEntity->getEntityName(),
+                $sizeName,
+                $type
+            );
+        } elseif ($imageOrEntity === null) {
+            return $this->getEmptyImageUrl();
+        }
+
         try {
             return $this->imageFacade->getImageUrl($this->domain->getCurrentDomainConfig(), $imageOrEntity, $sizeName, $type);
         } catch (\Shopsys\FrameworkBundle\Component\Image\Exception\ImageNotFoundException $e) {
@@ -116,7 +130,7 @@ class ImageExtension extends Twig_Extension
     }
 
     /**
-     * @param \Shopsys\FrameworkBundle\Component\Image\Image|Object $imageOrEntity
+     * @param \Shopsys\FrameworkBundle\Component\Image\Image|\Shopsys\FrameworkBundle\ReadModel\Image\ImageView|Object|null $imageOrEntity
      * @param array $attributes
      * @return string
      */
@@ -125,10 +139,27 @@ class ImageExtension extends Twig_Extension
         $this->preventDefault($attributes);
 
         try {
-            $image = $this->imageFacade->getImageByObject($imageOrEntity, $attributes['type']);
-            $entityName = $image->getEntityName();
-            $attributes['src'] = $this->getImageUrl($image, $attributes['size'], $attributes['type']);
-            $additionalImagesData = $this->imageFacade->getAdditionalImagesData($this->domain->getCurrentDomainConfig(), $image, $attributes['size'], $attributes['type']);
+            if ($imageOrEntity instanceof ImageView) {
+                $imageAttributes = [
+                    $this->domain->getCurrentDomainConfig(),
+                    $imageOrEntity->getId(),
+                    $imageOrEntity->getExtension(),
+                    $entityName = $imageOrEntity->getEntityName(),
+                    $attributes['type'],
+                    $attributes['size'],
+                ];
+                $attributes['src'] = $this->imageFacade->getImageUrlFromAttributes(...$imageAttributes);
+                $additionalImagesData = $this->imageFacade->getAdditionalImagesDataFromAttributes(...$imageAttributes);
+            } elseif ($imageOrEntity === null) {
+                $entityName = 'noimage';
+                $attributes['src'] = $this->getEmptyImageUrl();
+                $additionalImagesData = [];
+            } else {
+                $image = $this->imageFacade->getImageByObject($imageOrEntity, $attributes['type']);
+                $entityName = $image->getEntityName();
+                $attributes['src'] = $this->getImageUrl($image, $attributes['size'], $attributes['type']);
+                $additionalImagesData = $this->imageFacade->getAdditionalImagesData($this->domain->getCurrentDomainConfig(), $image, $attributes['size'], $attributes['type']);
+            }
         } catch (\Shopsys\FrameworkBundle\Component\Image\Exception\ImageNotFoundException $e) {
             $entityName = 'noimage';
             $attributes['src'] = $this->getEmptyImageUrl();

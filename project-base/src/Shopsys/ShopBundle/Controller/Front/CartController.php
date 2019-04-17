@@ -12,6 +12,7 @@ use Shopsys\FrameworkBundle\Model\Order\Preview\OrderPreviewFactory;
 use Shopsys\FrameworkBundle\Model\Product\Accessory\ProductAccessoryFacade;
 use Shopsys\FrameworkBundle\Model\Product\Product;
 use Shopsys\FrameworkBundle\Model\TransportAndPayment\FreeTransportAndPaymentFacade;
+use Shopsys\FrameworkBundle\ReadModel\Product\ProductActionView;
 use Shopsys\ShopBundle\Form\Front\Cart\AddProductFormType;
 use Shopsys\ShopBundle\Form\Front\Cart\CartFormType;
 use Symfony\Component\HttpFoundation\Request;
@@ -157,6 +158,7 @@ class CartController extends FrontBaseController
     /**
      * @param \Shopsys\FrameworkBundle\Model\Product\Product $product
      * @param string $type
+     * @deprecated This action is deprecated since 7.2.0, use ShopsysShopBundle:Front/Cart:productAction instead
      */
     public function addProductFormAction(Product $product, $type = 'normal')
     {
@@ -167,6 +169,23 @@ class CartController extends FrontBaseController
         return $this->render('@ShopsysShop/Front/Inline/Cart/addProduct.html.twig', [
             'form' => $form->createView(),
             'product' => $product,
+            'type' => $type,
+        ]);
+    }
+
+    /**
+     * @param \Shopsys\FrameworkBundle\ReadModel\Product\ProductActionView $productActionView
+     * @param string $type
+     */
+    public function productActionAction(ProductActionView $productActionView, $type = 'normal')
+    {
+        $form = $this->createForm(AddProductFormType::class, ['productId' => $productActionView->getId()], [
+            'action' => $this->generateUrl('front_cart_add_product'),
+        ]);
+
+        return $this->render('@ShopsysShop/Front/Inline/Cart/productAction.html.twig', [
+            'form' => $form->createView(),
+            'productActionView' => $productActionView,
             'type' => $type,
         ]);
     }

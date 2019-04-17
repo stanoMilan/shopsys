@@ -10,6 +10,7 @@ services:
               arguments:
                 - analyzed_namespaces:
                     - Shopsys\FrameworkBundle\Model
+                    - Shopsys\FrameworkBundle\ReadModel
                     - Shopsys\FrameworkBundle\Component
                     - Shopsys\FrameworkBundle\Controller
 
