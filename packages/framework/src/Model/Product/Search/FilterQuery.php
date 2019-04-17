@@ -10,6 +10,8 @@ use Shopsys\FrameworkBundle\Model\Product\Listing\ProductListOrderingConfig;
 
 class FilterQuery
 {
+    protected const MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT = 100;
+
     /** @var array */
     protected $filters = [];
 
@@ -317,5 +319,215 @@ class FilterQuery
     protected function countFrom(int $page, int $limit): int
     {
         return ($page - 1) * $limit;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNonPlusNumbersQuery(): array
+    {
+        return [
+            'index' => $this->indexName,
+            'type' => '_doc',
+            'body' => [
+                'size' => 0,
+                'aggs' => [
+                    'flags' => [
+                        'terms' => [
+                            'field' => 'flags',
+                            'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                        ],
+                    ],
+                    'brands' => [
+                        'terms' => [
+                            'field' => 'brand',
+                            'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                        ],
+                    ],
+                    'stock' => [
+                        'filter' => [
+                            'term' => [
+                                'in_stock' => 'true',
+                            ],
+                        ],
+                    ],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must' => $this->match,
+                        'filter' => $this->filters,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function getNonPlusNumbersWithParametersQuery(): array
+    {
+        $query = $this->getNonPlusNumbersQuery();
+        $query['body']['aggs']['parameters'] = [
+            'nested' => [
+                'path' => 'parameters',
+            ],
+            'aggs' => [
+                'by_parameters' => [
+                    'terms' => [
+                        'field' => 'parameters.parameter_id',
+                        'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                    ],
+                    'aggs' => [
+                        'by_value' => [
+                            'terms' => [
+                                'field' => 'parameters.parameter_value_id',
+                                'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        return $query;
+    }
+
+    /**
+     * @param int[] $excludedFlagIds
+     * @return array
+     */
+    public function getFlagsPlusNumbersQuery(array $excludedFlagIds): array
+    {
+        return [
+            'index' => $this->indexName,
+            'type' => '_doc',
+            'body' => [
+                'size' => 0,
+                'aggs' => [
+                    'flags' => [
+                        'terms' => [
+                            'field' => 'flags',
+                            'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                        ],
+                    ],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must' => $this->match,
+                        'filter' => $this->filters,
+                        'must_not' => [
+                            'terms' => [
+                                'flags' => $excludedFlagIds,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param int[] $excludedBrandsIds
+     * @return array
+     */
+    public function getBrandsPlusNumbersQuery(array $excludedBrandsIds): array
+    {
+        return [
+            'index' => $this->indexName,
+            'type' => '_doc',
+            'body' => [
+                'size' => 0,
+                'aggs' => [
+                    'brands' => [
+                        'terms' => [
+                            'field' => 'brand',
+                            'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                        ],
+                    ],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must' => $this->match,
+                        'filter' => $this->filters,
+                        'must_not' => [
+                            'terms' => [
+                                'brand' => $excludedBrandsIds,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param int $parameterId
+     * @param array $valuesIds
+     * @return array
+     */
+    public function getParametersPlusNumbersQuery(int $parameterId, array $valuesIds): array
+    {
+        return [
+            'index' => $this->indexName,
+            'type' => '_doc',
+            'body' => [
+                'size' => 0,
+                'aggs' => [
+                    'parameters' => [
+                        'nested' => [
+                            'path' => 'parameters',
+                        ],
+                        'aggs' => [
+                            'filtered_for_parameter' => [
+                                'filter' => [
+                                    'term' => [
+                                        'parameters.parameter_id' => $parameterId,
+                                    ],
+                                ],
+                                'aggs' => [
+                                    'by_parameters' => [
+                                        'terms' => [
+                                            'field' => 'parameters.parameter_id',
+                                            'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                                        ],
+                                        'aggs' => [
+                                            'by_value' => [
+                                                'terms' => [
+                                                    'field' => 'parameters.parameter_value_id',
+                                                    'size' => static::MAXIMUM_REASONABLE_AGGREGATION_BUCKET_COUNT,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'query' => [
+                    'bool' => [
+                        'must' => $this->match,
+                        'filter' => $this->filters,
+                        'must_not' => [
+                            [
+                                'nested' => [
+                                    'path' => 'parameters',
+                                    'query' => [
+                                        'bool' => [
+                                            'must' => [
+                                                'terms' => [
+                                                    'parameters.parameter_value_id' => $valuesIds,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }
