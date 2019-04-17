@@ -9,7 +9,6 @@ use Elasticsearch\Client;
 use Shopsys\FrameworkBundle\Component\Elasticsearch\ElasticsearchStructureManager;
 use Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup;
 use Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData;
-use Shopsys\FrameworkBundle\Model\Product\Parameter\ParameterValue;
 
 class ProductElasticsearchRepository
 {
@@ -41,6 +40,11 @@ class ProductElasticsearchRepository
     protected $elasticsearchStructureManager;
 
     /**
+     * @var \Shopsys\FrameworkBundle\Model\Product\Search\ProductFilterDataToQueryTransformer
+     */
+    protected $productFilterDataToQueryTransformer;
+
+    /**
      * @param string $indexPrefix
      * @param \Elasticsearch\Client $client
      * @param \Shopsys\FrameworkBundle\Model\Product\Search\ProductElasticsearchConverter $productElasticsearchConverter
@@ -56,6 +60,7 @@ class ProductElasticsearchRepository
         $this->client = $client;
         $this->productElasticsearchConverter = $productElasticsearchConverter;
         $this->elasticsearchStructureManager = $elasticsearchStructureManager;
+        $this->productFilterDataToQueryTransformer = new ProductFilterDataToQueryTransformer();
     }
 
     /**
@@ -246,80 +251,14 @@ class ProductElasticsearchRepository
     {
         $filterQuery = new FilterQuery($indexName);
 
-        $this->addBrandsToQuery($productFilterData, $filterQuery);
-        $this->addFlagsToQuery($productFilterData, $filterQuery);
-        $this->addParametersToQuery($productFilterData, $filterQuery);
-        $this->addStockToQuery($productFilterData, $filterQuery);
-        $this->addPricesToQuery($productFilterData, $filterQuery, $pricingGroup);
+        $this->productFilterDataToQueryTransformer->addBrandsToQuery($productFilterData, $filterQuery);
+        $this->productFilterDataToQueryTransformer->addFlagsToQuery($productFilterData, $filterQuery);
+        $this->productFilterDataToQueryTransformer->addParametersToQuery($productFilterData, $filterQuery);
+        $this->productFilterDataToQueryTransformer->addStockToQuery($productFilterData, $filterQuery);
+        $this->productFilterDataToQueryTransformer->addPricesToQuery($productFilterData, $filterQuery, $pricingGroup);
         $filterQuery->applyOrdering($orderingModeId, $pricingGroup);
 
         return $filterQuery;
-    }
-
-    /**
-     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
-     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
-     */
-    protected function addBrandsToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
-    {
-        $brandIds = [];
-        foreach ($productFilterData->brands as $brand) {
-            $brandIds[] = $brand->getId();
-        }
-        if ($brandIds) {
-            $filterQuery->filterByBrands($brandIds);
-        }
-    }
-
-    /**
-     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
-     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
-     */
-    protected function addFlagsToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
-    {
-        $flagIds = [];
-        foreach ($productFilterData->flags as $flag) {
-            $flagIds[] = $flag->getId();
-        }
-        if ($flagIds) {
-            $filterQuery->filterByFlags($flagIds);
-        }
-    }
-
-    /**
-     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
-     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
-     */
-    protected function addParametersToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
-    {
-        if ($productFilterData->parameters) {
-            $parameters = $this->flattenParameterFilterData($productFilterData->parameters);
-
-            $filterQuery->filterByParameters($parameters);
-        }
-    }
-
-    /**
-     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
-     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
-     */
-    protected function addStockToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery): void
-    {
-        if ($productFilterData->inStock) {
-            $filterQuery->filterOnlyInStock();
-        }
-    }
-
-    /**
-     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ProductFilterData $productFilterData
-     * @param \Shopsys\FrameworkBundle\Model\Product\Search\FilterQuery $filterQuery
-     * @param \Shopsys\FrameworkBundle\Model\Pricing\Group\PricingGroup $pricingGroup
-     */
-    protected function addPricesToQuery(ProductFilterData $productFilterData, FilterQuery $filterQuery, PricingGroup $pricingGroup): void
-    {
-        if ($productFilterData->maximalPrice || $productFilterData->minimalPrice) {
-            $filterQuery->filterByPrices($pricingGroup, $productFilterData->minimalPrice, $productFilterData->maximalPrice);
-        }
     }
 
     /**
@@ -392,31 +331,5 @@ class ProductElasticsearchRepository
                 ],
             ],
         ]);
-    }
-
-    /**
-     * @param \Shopsys\FrameworkBundle\Model\Product\Filter\ParameterFilterData[] $parameters
-     * @return array
-     */
-    protected function flattenParameterFilterData(array $parameters): array
-    {
-        $return = [];
-
-        foreach ($parameters as $parameterFilterData) {
-            /* @var $parameterFilterData \Shopsys\FrameworkBundle\Model\Product\Filter\ParameterFilterData */
-            if (\count($parameterFilterData->values) === 0) {
-                continue;
-            }
-
-            $return[$parameterFilterData->parameter->getId()] =
-                \array_map(
-                    static function (ParameterValue $item) {
-                        return $item->getId();
-                    },
-                    $parameterFilterData->values
-                );
-        }
-
-        return $return;
     }
 }
