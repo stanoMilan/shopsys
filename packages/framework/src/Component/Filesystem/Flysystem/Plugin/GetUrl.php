@@ -27,7 +27,7 @@ class GetUrl extends BaseGetUrl
      */
     protected function getFromMethod($path)
     {
-        if (!isset($this->options['URL'])) {
+        if (isset($this->options['URL'])) {
             return $this->options['URL'] . str_replace($this->options['path'], '', $path);
         }
 
