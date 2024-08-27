@@ -65,8 +65,10 @@ class EntityLogFacade
         object $entity,
         LoggableEntityConfig $loggableEntityConfig,
         string $action,
-        array $changes = [],
-    ): EntityLog {
+        array $changes,
+        string $logCollectionNumber,
+
+): EntityLog {
         $userIdentifier = $this->detectionFacade->getUserIdentifier();
         $source = $this->detectionFacade->getEntityLogSource();
         $parentEntityFunctionName = $loggableEntityConfig->getParentEntityFunctionName();
@@ -82,6 +84,7 @@ class EntityLogFacade
         $entityLogData->source = $source;
         $entityLogData->changeSet = $changes;
         $entityLogData->parentEntityName = $loggableEntityConfig->getParentEntityName();
+        $entityLogData->logCollectionNumber = $logCollectionNumber;
         $entityLogData->parentEntityId = is_object($parentEntity) && $parentEntityIdentityFunctionName !== null
             ?
             call_user_func([$parentEntity, $parentEntityIdentityFunctionName])
