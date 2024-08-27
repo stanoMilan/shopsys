@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Shopsys\FrameworkBundle\Component\EntityLog\ChangeSet;
 
-use Doctrine\ORM\PersistentCollection;
 use Shopsys\FrameworkBundle\Component\EntityLog\Attribute\LoggableEntityConfigFactory;
 use Shopsys\FrameworkBundle\Component\EntityLog\ChangeSet\DataTypeResolver\DataTypeResolverInterface;
 use Shopsys\FrameworkBundle\Component\EntityLog\Model\EntityLogFacade;
@@ -63,7 +62,7 @@ class ChangeSetResolver
         $resolvedChangeSet = [];
 
         foreach ($changeSet as $property => $changes) {
-            if (!$loggableSetup->isPropertyLoggable($property) || $changes instanceof PersistentCollection) {
+            if (!$loggableSetup->isPropertyLoggable($property)) {
                 continue;
             }
             $resolvedChanges = $this->getResolvedChanges($changes);

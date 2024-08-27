@@ -8,7 +8,6 @@ use App\Model\Product\Exception\DeprecatedAvailabilityPropertyFromProductExcepti
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
-use Shopsys\FrameworkBundle\Component\EntityLog\Attribute\Loggable;
 use Shopsys\FrameworkBundle\Model\Product\Exception\MainVariantCannotBeVariantException;
 use Shopsys\FrameworkBundle\Model\Product\Exception\ProductIsAlreadyVariantException;
 use Shopsys\FrameworkBundle\Model\Product\Exception\VariantCanBeAddedOnlyToMainVariantException;
@@ -42,7 +41,6 @@ use Shopsys\FrameworkBundle\Model\Product\ProductData as BaseProductData;
  * @method \App\Model\Product\Flag\Flag[] getFlags(int $domainId)
  * @method setDomains(\App\Model\Product\ProductData $productData)
  */
-#[Loggable(Loggable::STRATEGY_INCLUDE_ALL)]
 class Product extends BaseProduct
 {
     public const PDF_SUFFIX = '.pdf';

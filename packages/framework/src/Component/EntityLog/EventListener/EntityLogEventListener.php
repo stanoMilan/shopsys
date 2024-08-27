@@ -73,11 +73,15 @@ class EntityLogEventListener implements ResetInterface
     {
         $loggableSetup = $this->loggableEntityConfigFactory->getLoggableSetupByEntity($entity);
 
+        try {
             if (!$loggableSetup->isLoggable()) {
                 return;
             }
 
             $this->registerLog($entity, $loggableSetup, $action);
+        } catch (Throwable $exception) {
+            $this->monolog->error($exception->getMessage());
+        }
     }
 
     /**
