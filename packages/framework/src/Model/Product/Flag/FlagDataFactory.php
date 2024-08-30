@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Shopsys\FrameworkBundle\Model\Product\Flag;
 
 use Shopsys\FrameworkBundle\Component\Domain\Domain;
+use Shopsys\FrameworkBundle\Component\Router\FriendlyUrl\FriendlyUrlFacade;
 
 class FlagDataFactory implements FlagDataFactoryInterface
 {
     /**
      * @param \Shopsys\FrameworkBundle\Component\Domain\Domain $domain
      */
-    public function __construct(protected readonly Domain $domain)
+    public function __construct(
+        protected readonly Domain $domain,
+        protected readonly FriendlyUrlFacade $friendlyUrlFacade,
+    )
     {
     }
 
@@ -69,6 +73,12 @@ class FlagDataFactory implements FlagDataFactoryInterface
         foreach ($translations as $translate) {
             $names[$translate->getLocale()] = $translate->getName();
         }
+
+        foreach ($this->domain->getAllIds() as $domainId) {
+            $mainFriendlyUrl = $this->friendlyUrlFacade->findMainFriendlyUrl($domainId, 'front_flag_detail', $flag->getId());
+            $flagData->urls->mainFriendlyUrlsByDomainId[$domainId] = $mainFriendlyUrl;
+        }
+
         $flagData->name = $names;
         $flagData->rgbColor = $flag->getRgbColor();
         $flagData->visible = $flag->isVisible();

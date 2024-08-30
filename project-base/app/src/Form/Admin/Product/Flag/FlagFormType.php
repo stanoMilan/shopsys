@@ -72,21 +72,6 @@ class FlagFormType extends AbstractType
 
         $builder->add($builderBasicInformationGroup);
 
-        if ($options['flag'] !== null) {
-            $builderSeoInformationGroup = $builder->create('seoGroup', GroupType::class, [
-                'label' => t('Seo'),
-            ]);
-
-            $builderSeoInformationGroup
-                ->add('urls', UrlListType::class, [
-                    'route_name' => 'front_flag_detail',
-                    'entity_id' => $options['flag']->getId(),
-                    'label' => t('URL addresses'),
-                ]);
-
-            $builder->add($builderSeoInformationGroup);
-        }
-
         $builder->add('save', SubmitType::class);
 
         $this->formBuilderHelper->disableFieldsByConfigurations($builder, self::DISABLED_FIELDS);

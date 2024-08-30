@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Shopsys\FrameworkBundle\Model\Product\Flag;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Shopsys\FrameworkBundle\Component\Router\FriendlyUrl\FriendlyUrlFacade;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class FlagFacade
@@ -20,6 +21,7 @@ class FlagFacade
         protected readonly FlagRepository $flagRepository,
         protected readonly FlagFactory $flagFactory,
         protected readonly EventDispatcherInterface $eventDispatcher,
+        protected readonly FriendlyUrlFacade $friendlyUrlFacade,
     ) {
     }
 
@@ -59,6 +61,7 @@ class FlagFacade
         $flag = $this->flagFactory->create($flagData);
         $this->em->persist($flag);
         $this->em->flush();
+        $this->friendlyUrlFacade->createFriendlyUrls('front_flag_detail', $flag->getId(), $flag->getNames());
 
         $this->dispatchFlagEvent($flag, FlagEvent::CREATE);
 
@@ -74,6 +77,10 @@ class FlagFacade
     {
         $flag = $this->flagRepository->getById($flagId);
         $flag->edit($flagData);
+
+        $this->friendlyUrlFacade->saveUrlListFormData('front_flag_detail', $flag->getId(), $flagData->urls);
+        $this->friendlyUrlFacade->createFriendlyUrls('front_flag_detail', $flag->getId(), $flag->getNames());
+
         $this->em->flush();
 
         $this->dispatchFlagEvent($flag, FlagEvent::UPDATE);

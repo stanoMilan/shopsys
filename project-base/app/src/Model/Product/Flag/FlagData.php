@@ -14,11 +14,6 @@ class FlagData extends BaseFlagData
      */
     public $akeneoCode;
 
-    /**
-     * @var \Shopsys\FrameworkBundle\Component\Router\FriendlyUrl\UrlListData
-     */
-    public $urls;
-
     public function __construct()
     {
         parent::__construct();

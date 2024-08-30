@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace App\Model\Product\Flag;
 
-use App\Component\Router\FriendlyUrl\FriendlyUrlFacade;
-use Doctrine\ORM\EntityManagerInterface;
-use Shopsys\FrameworkBundle\Model\Product\Flag\FlagData;
 use Shopsys\FrameworkBundle\Model\Product\Flag\FlagFacade as BaseFlagFacade;
-use Shopsys\FrameworkBundle\Model\Product\Flag\FlagFactory;
-use Shopsys\FrameworkBundle\Model\Product\Flag\FlagRepository;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+
 
 /**
  * @property \App\Model\Product\Flag\FlagRepository $flagRepository
@@ -24,53 +19,6 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class FlagFacade extends BaseFlagFacade
 {
-    /**
-     * @param \Doctrine\ORM\EntityManagerInterface $em
-     * @param \App\Model\Product\Flag\FlagRepository $flagRepository
-     * @param \Shopsys\FrameworkBundle\Model\Product\Flag\FlagFactory $flagFactory
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
-     * @param \App\Component\Router\FriendlyUrl\FriendlyUrlFacade $friendlyUrlFacade
-     */
-    public function __construct(
-        EntityManagerInterface $em,
-        FlagRepository $flagRepository,
-        FlagFactory $flagFactory,
-        EventDispatcherInterface $eventDispatcher,
-        private FriendlyUrlFacade $friendlyUrlFacade,
-    ) {
-        parent::__construct($em, $flagRepository, $flagFactory, $eventDispatcher);
-    }
-
-    /**
-     * @param \App\Model\Product\Flag\FlagData $flagData
-     * @return \App\Model\Product\Flag\Flag
-     */
-    public function create(FlagData $flagData)
-    {
-        /** @var \App\Model\Product\Flag\Flag $flag */
-        $flag = parent::create($flagData);
-
-        $this->friendlyUrlFacade->createFriendlyUrls('front_flag_detail', $flag->getId(), $flag->getNames());
-
-        return $flag;
-    }
-
-    /**
-     * @param int $flagId
-     * @param \App\Model\Product\Flag\FlagData $flagData
-     * @return \App\Model\Product\Flag\Flag
-     */
-    public function edit($flagId, FlagData $flagData)
-    {
-        /** @var \App\Model\Product\Flag\Flag $flag */
-        $flag = parent::edit($flagId, $flagData);
-
-        $this->friendlyUrlFacade->saveUrlListFormData('front_flag_detail', $flag->getId(), $flagData->urls);
-        $this->friendlyUrlFacade->createFriendlyUrls('front_flag_detail', $flag->getId(), $flag->getNames());
-
-        return $flag;
-    }
-
     /**
      * @param string $akeneoCode
      * @return \App\Model\Product\Flag\Flag|null

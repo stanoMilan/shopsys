@@ -26,6 +26,11 @@ class FlagData
      */
     public $uuid;
 
+    /**
+     * @var \Shopsys\FrameworkBundle\Component\Router\FriendlyUrl\UrlListData
+     */
+    public $urls;
+
     public function __construct()
     {
         $this->name = [];

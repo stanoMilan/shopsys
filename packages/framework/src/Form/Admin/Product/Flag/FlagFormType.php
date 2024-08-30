@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Shopsys\FrameworkBundle\Form\Admin\Product\Flag;
 
 use Shopsys\FrameworkBundle\Form\ColorPickerType;
+use Shopsys\FrameworkBundle\Form\GroupType;
 use Shopsys\FrameworkBundle\Form\Locale\LocalizedType;
+use Shopsys\FrameworkBundle\Form\UrlListType;
 use Shopsys\FrameworkBundle\Model\Product\Flag\FlagData;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -41,8 +43,23 @@ class FlagFormType extends AbstractType
                         'maxMessage' => 'Flag color in must be in valid hexadecimal code e.g. #3333ff',
                     ]),
                 ],
-            ])
-            ->add('visible', CheckboxType::class, ['required' => false]);
+            ]);
+
+            if ($options['flag'] !== null) {
+                $builderSeoInformationGroup = $builder->create('seoGroup', GroupType::class, [
+                    'label' => t('Seo'),
+                ]);
+
+                $builderSeoInformationGroup
+                    ->add('urls', UrlListType::class, [
+                        'route_name' => 'front_flag_detail',
+                        'entity_id' => $options['flag']->getId(),
+                        'label' => t('URL addresses'),
+                    ]);
+
+                $builder->add($builderSeoInformationGroup);
+            }
+            $builder->add('visible', CheckboxType::class, ['required' => false]);
     }
 
     /**
